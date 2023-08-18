@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/youheiyouhei/transgo/api/config"
 )
 
 var configFile string
@@ -42,7 +43,7 @@ For example:
 			value := parts[1]
 
 			if key == "api_key" {
-				err := setAPIKey(value)
+				err := config.SetAPIKey(value)
 				if err != nil {
 					fmt.Println("Error setting API key:", err)
 				} else {
@@ -53,16 +54,4 @@ For example:
 			}
 		}
 	},
-}
-
-func setAPIKey(key string) error {
-	return os.WriteFile(configFile, []byte(key), 0600)
-}
-
-func getAPIKey() (string, error) {
-	data, err := os.ReadFile(configFile)
-	if err != nil {
-		return "", err
-	}
-	return string(data), nil
 }
