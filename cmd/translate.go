@@ -1,16 +1,11 @@
-/*
-Copyright © 2023 NAME HERE <EMAIL ADDRESS>
-*/
 package cmd
 
 import (
 	"fmt"
-
 	"github.com/spf13/cobra"
 	"github.com/youheiyouhei/transgo/api/deepl"
 )
 
-// translateCmd represents the translate command
 var translateCmd = &cobra.Command{
 	Use:   "translate [text]",
 	Short: "Translates text from a source language to a target language",
@@ -23,34 +18,28 @@ For example:
 		target, _ := cmd.Flags().GetString("target")
 		text := args[0] // get the text from the arguments
 
-		translatedText, err := deepl.NewDeeplClient().Translate([]string{text}, source, target)
-
+		translatedText, err := handleTranslation(text, source, target, deepl.NewDeeplClient())
 		if err != nil {
 			fmt.Println("Translation failed.", err)
 			return
 		}
-
+		
 		fmt.Println("Translated text:", translatedText)
 	},
 }
 
-const deeplAPIEndpoint = "https://api-free.deepl.com/v2/translate"
+func handleTranslation(text, source, target string, client *deepl.DeeplClient) (string, error) {
+	translatedText, err := client.Translate([]string{text}, source, target)
+	if err != nil {
+		fmt.Println("Translation failed.", err)
+		return "", err
+	}
 
-type DeeplRequest struct {
-	Texts  []string `json:"text"`
-	Source string   `json:"source_lang"`
-	Target string   `json:"target_lang"`
-}
-
-type DeeplResponse struct {
-	Translations []struct {
-		Text string `json:"text"`
-	} `json:"translations"`
+	return translatedText, nil
 }
 
 func init() {
 	rootCmd.AddCommand(translateCmd)
-
 	translateCmd.Flags().StringP("source", "s", "", "Source language")
 	translateCmd.Flags().StringP("target", "t", "en", "Target language")
 }
