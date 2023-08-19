@@ -1,8 +1,11 @@
 package config
 
 import (
+	"bufio"
+	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 var configFile string
@@ -16,13 +19,29 @@ func init() {
 }
 
 func SetAPIKey(key string) error {
-	return os.WriteFile(configFile, []byte(key), 0600)
+	data := fmt.Sprintf("api_key=%s", key)
+	return os.WriteFile(configFile, []byte(data), 0600)
 }
 
 func GetAPIKey() (string, error) {
-	data, err := os.ReadFile(configFile)
+	file, err := os.Open(configFile)
 	if err != nil {
 		return "", err
 	}
-	return string(data), nil
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		keyPair := strings.SplitN(line, "=", 2)
+		if len(keyPair) == 2 && keyPair[0] == "api_key" {
+			return keyPair[1], nil
+		}
+	}
+
+	if scanner.Err() != nil {
+		return "", scanner.Err()
+	}
+
+	return "", fmt.Errorf("api_key not found in config file")
 }
