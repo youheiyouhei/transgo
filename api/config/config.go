@@ -3,28 +3,63 @@ package config
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
 )
 
-var configFile string
+// FileOperator provides an interface for file operations, making it testable.
+type FileOperator interface {
+	Open(filename string) (io.ReadCloser, error)
+	Write(filename string, data []byte, perm os.FileMode) error
+}
 
-func init() {
+// OSFileOperator is a real FileOperator that interacts with the OS.
+type OSFileOperator struct{}
+
+func (f OSFileOperator) Open(filename string) (io.ReadCloser, error) {
+	return os.Open(filename)
+}
+
+func (f OSFileOperator) Write(filename string, data []byte, perm os.FileMode) error {
+	return os.WriteFile(filename, data, perm)
+}
+
+// Default file operator is the OSFileOperator.
+var defaultOperator FileOperator = OSFileOperator{}
+
+func getConfigFilePath() (string, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
-		panic("Could not find user's home directory: " + err.Error())
+		return "", fmt.Errorf("could not find user's home directory: %v", err)
 	}
-	configFile = filepath.Join(home, ".transgo")
+	return filepath.Join(home, ".transgo"), nil
 }
 
 func SetAPIKey(key string) error {
+	return SetAPIKeyWithOperator(key, defaultOperator)
+}
+
+func SetAPIKeyWithOperator(key string, op FileOperator) error {
+	configPath, err := getConfigFilePath()
+	if err != nil {
+		return err
+	}
 	data := fmt.Sprintf("api_key=%s", key)
-	return os.WriteFile(configFile, []byte(data), 0600)
+	return op.Write(configPath, []byte(data), 0600)
 }
 
 func GetAPIKey() (string, error) {
-	file, err := os.Open(configFile)
+	return GetAPIKeyWithOperator(defaultOperator)
+}
+
+func GetAPIKeyWithOperator(op FileOperator) (string, error) {
+	configPath, err := getConfigFilePath()
+	if err != nil {
+		return "", err
+	}
+	file, err := op.Open(configPath)
 	if err != nil {
 		return "", err
 	}

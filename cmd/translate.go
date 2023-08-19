@@ -25,7 +25,7 @@ For example:
 			fmt.Println("Translation failed.", err)
 			return
 		}
-		
+
 		fmt.Println("Translated text:", translatedText)
 	},
 }
