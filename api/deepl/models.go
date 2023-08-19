@@ -8,7 +8,6 @@ import (
 	"net/http"
 
 	"github.com/youheiyouhei/transgo/api/config"
-	"github.com/youheiyouhei/transgo/translator"
 )
 
 const deeplAPIEndpoint = "https://api-free.deepl.com/v2/translate"
@@ -19,7 +18,24 @@ func NewDeeplClient() *DeeplClient {
 	return &DeeplClient{}
 }
 
-func (d *DeeplClient) Translate(request translator.TranslationRequest) (string, error) {
+type TranslationRequest struct {
+	Texts  []string `json:"text"`
+	Source string   `json:"source_lang"`
+	Target string   `json:"target_lang"`
+}
+
+type TranslationResponse struct {
+	Translations []struct {
+		Text string `json:"text"`
+	} `json:"translations"`
+}
+
+func (d *DeeplClient) Translate(texts []string, source string, target string) (string, error) {
+	request := TranslationRequest{
+		Texts:  texts,
+		Source: source,
+		Target: target,
+	}
 	data, err := d.marshalRequest(request)
 	if err != nil {
 		return "", err
@@ -38,7 +54,7 @@ func (d *DeeplClient) Translate(request translator.TranslationRequest) (string, 
 	return d.parseResponse(respBody)
 }
 
-func (d *DeeplClient) marshalRequest(request translator.TranslationRequest) ([]byte, error) {
+func (d *DeeplClient) marshalRequest(request TranslationRequest) ([]byte, error) {
 	data, err := json.Marshal(request)
 	if err != nil {
 		return nil, fmt.Errorf("could not marshal request data: %v", err)
@@ -74,7 +90,7 @@ func (d *DeeplClient) sendRequest(req *http.Request) ([]byte, error) {
 }
 
 func (d *DeeplClient) parseResponse(body []byte) (string, error) {
-	var deeplResp translator.TranslationResponse
+	var deeplResp TranslationResponse
 	if err := json.Unmarshal(body, &deeplResp); err != nil {
 		return "", fmt.Errorf("could not unmarshal response data: %v", err)
 	}

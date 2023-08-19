@@ -8,7 +8,6 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/youheiyouhei/transgo/api/deepl"
-	"github.com/youheiyouhei/transgo/translator"
 )
 
 // translateCmd represents the translate command
@@ -24,13 +23,7 @@ For example:
 		target, _ := cmd.Flags().GetString("target")
 		text := args[0] // get the text from the arguments
 
-		req := translator.TranslationRequest{
-			Texts:  []string{text},
-			Target: target,
-			Source: source,
-		}
-
-		translatedText, err := deepl.NewDeeplClient().Translate(req)
+		translatedText, err := deepl.NewDeeplClient().Translate([]string{text}, source, target)
 
 		if err != nil {
 			fmt.Println("Translation failed.", err)
