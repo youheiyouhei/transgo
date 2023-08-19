@@ -1,5 +1,5 @@
 package translator
 
 type Translator interface {
-	Translate(texts []string, source string, target string) (string, error)
+	Translate(texts []string, source, target string) (string, error)
 }

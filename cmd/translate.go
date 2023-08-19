@@ -2,8 +2,10 @@ package cmd
 
 import (
 	"fmt"
+
 	"github.com/spf13/cobra"
 	"github.com/youheiyouhei/transgo/api/deepl"
+	"github.com/youheiyouhei/transgo/translator"
 )
 
 var translateCmd = &cobra.Command{
@@ -28,7 +30,7 @@ For example:
 	},
 }
 
-func handleTranslation(text, source, target string, client *deepl.DeeplClient) (string, error) {
+func handleTranslation(text, source, target string, client translator.Translator) (string, error) {
 	translatedText, err := client.Translate([]string{text}, source, target)
 	if err != nil {
 		fmt.Println("Translation failed.", err)
