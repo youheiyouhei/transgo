@@ -53,13 +53,24 @@ func executeConfigCmd(cmd *cobra.Command, args []string) {
 }
 
 func setConfiguration(kv string) error {
-	parts := strings.SplitN(kv, "=", 2)
-	if len(parts) != 2 {
-		return fmt.Errorf("Configuration should be in the format key=value")
+	key, value, err := parseKeyValue(kv)
+	if err != nil {
+		return err
 	}
 
-	key, value := parts[0], parts[1]
+	return applyConfiguration(key, value)
+}
 
+func parseKeyValue(kv string) (string, string, error) {
+	parts := strings.SplitN(kv, "=", 2)
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", "", fmt.Errorf("Configuration should be in the format key=value and neither key nor value should be empty")
+	}
+	return parts[0], parts[1], nil
+}
+
+
+func applyConfiguration(key, value string) error {
 	switch key {
 	case "api_key":
 		return config.SetAPIKey(value)
