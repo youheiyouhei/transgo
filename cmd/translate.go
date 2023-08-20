@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/youheiyouhei/transgo/api/deepl"
-	"github.com/youheiyouhei/transgo/translator"
+	"github.com/youheiyouhei/transgo/interfaces"
 )
 
 var translateCmd = &cobra.Command{
