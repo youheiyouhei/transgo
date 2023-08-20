@@ -30,7 +30,7 @@ For example:
 	},
 }
 
-func handleTranslation(text, source, target string, client translator.Translator) (string, error) {
+func handleTranslation(text, source, target string, client interfaces.Translator) (string, error) {
 	translatedText, err := client.Translate([]string{text}, source, target)
 	if err != nil {
 		fmt.Println("Translation failed.", err)

@@ -8,9 +8,13 @@ import (
 	"net/http"
 
 	"github.com/youheiyouhei/transgo/api/config"
+	"github.com/youheiyouhei/transgo/interfaces"
 )
 
-const deeplAPIEndpoint = "https://api-free.deepl.com/v2/translate"
+const (
+	deeplAPIEndpoint       = "https://api-free.deepl.com/v2/translate"
+	deeplLanguagesEndpoint = "https://api-free.deepl.com/v2/languages"
+)
 
 type DeeplClient struct{}
 
@@ -30,18 +34,24 @@ type TranslationResponse struct {
 	} `json:"translations"`
 }
 
+type LanguageResponse struct {
+	Language          string `json:"language"`
+	Name              string `json:"name"`
+	SupportsFormality bool   `json:"supports_formality"`
+}
+
 func (d *DeeplClient) Translate(texts []string, source string, target string) (string, error) {
 	request := TranslationRequest{
 		Texts:  texts,
 		Source: source,
 		Target: target,
 	}
-	data, err := d.marshalRequest(request)
+	data, err := json.Marshal(request)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("could not marshal request data: %v", err)
 	}
 
-	req, err := d.createRequest(data)
+	req, err := d.createRequest("POST", deeplAPIEndpoint, data)
 	if err != nil {
 		return "", err
 	}
@@ -54,16 +64,51 @@ func (d *DeeplClient) Translate(texts []string, source string, target string) (s
 	return d.parseResponse(respBody)
 }
 
-func (d *DeeplClient) marshalRequest(request TranslationRequest) ([]byte, error) {
-	data, err := json.Marshal(request)
+func (d *DeeplClient) GetSupportedLanguages() (interfaces.SupportedLanguages, error) {
+	req, err := http.NewRequest("GET", deeplLanguagesEndpoint, nil)
 	if err != nil {
-		return nil, fmt.Errorf("could not marshal request data: %v", err)
+		return nil, fmt.Errorf("could not create new request: %v", err)
 	}
-	return data, nil
+
+	apiKey, err := config.GetAPIKey()
+	if err != nil {
+		return nil, fmt.Errorf("could not get API key: %v", err)
+	}
+
+	req.Header.Set("Authorization", "DeepL-Auth-Key "+apiKey)
+
+	respBody, err := d.sendRequest(req)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := d.parseLanguageResponse(respBody)
+	if err != nil {
+		return nil, err
+	}
+
+	var supportedLanguages interfaces.SupportedLanguages
+	for _, v := range res {
+		supportedLanguages = append(supportedLanguages, interfaces.SupportedLanguage{
+			Code: v.Language,
+			Name: v.Name,
+		})
+	}
+
+	return supportedLanguages, nil
 }
 
-func (d *DeeplClient) createRequest(data []byte) (*http.Request, error) {
-	req, err := http.NewRequest("POST", deeplAPIEndpoint, bytes.NewBuffer(data))
+func (d *DeeplClient) parseLanguageResponse(body []byte) ([]LanguageResponse, error) {
+	var languages []LanguageResponse
+	if err := json.Unmarshal(body, &languages); err != nil {
+		return nil, fmt.Errorf("could not unmarshal language response data: %v", err)
+	}
+
+	return languages, nil
+}
+
+func (d *DeeplClient) createRequest(method, endpoint string, data []byte) (*http.Request, error) {
+	req, err := http.NewRequest(method, endpoint, bytes.NewBuffer(data))
 	if err != nil {
 		return nil, fmt.Errorf("could not create new request: %v", err)
 	}
@@ -85,6 +130,10 @@ func (d *DeeplClient) sendRequest(req *http.Request) ([]byte, error) {
 		return nil, fmt.Errorf("could not make request to DeepL: %v", err)
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("received unexpected status %v from DeepL", resp.Status)
+	}
 
 	return io.ReadAll(resp.Body)
 }
