@@ -39,7 +39,6 @@ func fetchSupportedLanguages(client *deepl.DeeplClient) (interfaces.SupportedLan
 	return client.GetSupportedLanguages()
 }
 
-// displaySupportedLanguagesをformatSupportedLanguagesにリネームし、文字列を返すようにします
 func formatSupportedLanguages(languages interfaces.SupportedLanguages) string {
 	var output strings.Builder
 	output.WriteString("Available languages:\n")
