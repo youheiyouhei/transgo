@@ -2,11 +2,14 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/youheiyouhei/transgo/api/deepl"
+	"github.com/youheiyouhei/transgo/interfaces"
 )
 
+// languagesCmd represents the 'languages' command
 var languagesCmd = &cobra.Command{
 	Use:   "languages",
 	Short: "Lists available languages for translation",
@@ -14,19 +17,34 @@ var languagesCmd = &cobra.Command{
 using the DeepL API.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		client := deepl.NewDeeplClient()
-		languages, err := client.GetSupportedLanguages()
-		if err != nil {
-			fmt.Printf("Error fetching languages: %v\n", err)
-			return
-		}
-
-		fmt.Println("Available languages:")
-		for _, lang := range languages {
-			fmt.Printf("- %s (%s)\n", lang.Name, lang.Code)
-		}
+		executeLanguagesCmd(client)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(languagesCmd)
+}
+
+func executeLanguagesCmd(client *deepl.DeeplClient) {
+	languages, err := fetchSupportedLanguages(client)
+	if err != nil {
+		fmt.Printf("Error fetching languages: %v\n", err)
+		return
+	}
+
+	fmt.Println(formatSupportedLanguages(languages))
+}
+
+func fetchSupportedLanguages(client *deepl.DeeplClient) (interfaces.SupportedLanguages, error) {
+	return client.GetSupportedLanguages()
+}
+
+// displaySupportedLanguagesをformatSupportedLanguagesにリネームし、文字列を返すようにします
+func formatSupportedLanguages(languages interfaces.SupportedLanguages) string {
+	var output strings.Builder
+	output.WriteString("Available languages:\n")
+	for _, lang := range languages {
+		output.WriteString(fmt.Sprintf("- %s (%s)\n", lang.Name, lang.Code))
+	}
+	return output.String()
 }
