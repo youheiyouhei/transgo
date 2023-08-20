@@ -36,38 +36,42 @@ func executeConfigCmd(cmd *cobra.Command, args []string) {
 	setKeyValue, _ := cmd.Flags().GetString("set")
 
 	if setKeyValue != "" {
-		setConfiguration(setKeyValue)
+		err := setConfiguration(setKeyValue)
+		if err != nil {
+			fmt.Println("Error setting configuration:", err)
+			return
+		}
+		fmt.Println("Configuration set successfully.")
 	} else {
-		displayCurrentConfiguration()
+		apiKey, err := fetchCurrentConfiguration()
+		if err != nil {
+			fmt.Println("Error fetching API key:", err)
+			return
+		}
+		fmt.Println(formatConfiguration(apiKey))
 	}
 }
 
-func setConfiguration(kv string) {
+func setConfiguration(kv string) error {
 	parts := strings.SplitN(kv, "=", 2)
 	if len(parts) != 2 {
-		fmt.Println("Error: Configuration should be in the format key=value")
-		return
+		return fmt.Errorf("Configuration should be in the format key=value")
 	}
 
 	key, value := parts[0], parts[1]
 
 	switch key {
 	case "api_key":
-		if err := config.SetAPIKey(value); err != nil {
-			fmt.Println("Error setting API key:", err)
-		} else {
-			fmt.Println("API key set successfully.")
-		}
+		return config.SetAPIKey(value)
 	default:
-		fmt.Printf("Unknown configuration key: %s\n", key)
+		return fmt.Errorf("Unknown configuration key: %s", key)
 	}
 }
 
-func displayCurrentConfiguration() {
-	apiKey, err := config.GetAPIKey()
-	if err != nil {
-		fmt.Println("Error fetching API key:", err)
-		return
-	}
-	fmt.Printf("Current configuration:\napi_key: %s\n", apiKey)
+func fetchCurrentConfiguration() (string, error) {
+	return config.GetAPIKey()
+}
+
+func formatConfiguration(apiKey string) string {
+	return fmt.Sprintf("Current configuration:\napi_key: %s", apiKey)
 }
