@@ -29,29 +29,45 @@ var configCmd = &cobra.Command{
 	Long: `Allows you to set or get configuration parameters for the application.
 For example:
 ./transgo config --set api_key=YOUR_API_KEY`,
-	Run: func(cmd *cobra.Command, args []string) {
-		setKeyValue, _ := cmd.Flags().GetString("set")
+	Run: executeConfigCmd,
+}
 
-		if setKeyValue != "" {
-			parts := strings.SplitN(setKeyValue, "=", 2)
-			if len(parts) != 2 {
-				fmt.Println("Error: Configuration should be in the format key=value")
-				return
-			}
+func executeConfigCmd(cmd *cobra.Command, args []string) {
+	setKeyValue, _ := cmd.Flags().GetString("set")
 
-			key := parts[0]
-			value := parts[1]
+	if setKeyValue != "" {
+		setConfiguration(setKeyValue)
+	} else {
+		displayCurrentConfiguration()
+	}
+}
 
-			if key == "api_key" {
-				err := config.SetAPIKey(value)
-				if err != nil {
-					fmt.Println("Error setting API key:", err)
-				} else {
-					fmt.Println("API key set successfully.")
-				}
-			} else {
-				fmt.Printf("Unknown configuration key: %s\n", key)
-			}
+func setConfiguration(kv string) {
+	parts := strings.SplitN(kv, "=", 2)
+	if len(parts) != 2 {
+		fmt.Println("Error: Configuration should be in the format key=value")
+		return
+	}
+
+	key, value := parts[0], parts[1]
+
+	switch key {
+	case "api_key":
+		if err := config.SetAPIKey(value); err != nil {
+			fmt.Println("Error setting API key:", err)
+		} else {
+			fmt.Println("API key set successfully.")
 		}
-	},
+	default:
+		fmt.Printf("Unknown configuration key: %s\n", key)
+	}
+}
+
+func displayCurrentConfiguration() {
+	apiKey, err := config.GetAPIKey()
+	if err != nil {
+		fmt.Println("Error fetching API key:", err)
+		return
+	}
+	fmt.Printf("Current configuration:\napi_key: %s\n", apiKey)
 }
