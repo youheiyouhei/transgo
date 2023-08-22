@@ -69,7 +69,6 @@ func parseKeyValue(kv string) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
-
 func applyConfiguration(key, value string) error {
 	switch key {
 	case "api_key":
