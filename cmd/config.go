@@ -28,7 +28,7 @@ var configCmd = &cobra.Command{
 	Short: "Manage application configuration",
 	Long: `Allows you to set or get configuration parameters for the application.
 For example:
-./transgo config --set api_key=YOUR_API_KEY`,
+transgo config --set api_key=YOUR_API_KEY`,
 	Run: executeConfigCmd,
 }
 

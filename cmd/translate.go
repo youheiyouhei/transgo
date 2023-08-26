@@ -13,7 +13,7 @@ var translateCmd = &cobra.Command{
 	Short: "Translates text from a source language to a target language",
 	Long: `Translates text from a specified source language to a specified target language using an example translation API.
 For example:
-./appname translate --source=en --target=ja "Hello, world!"`,
+transgo translate --source=en --target=ja "Hello, world!"`,
 	Args: cobra.ExactArgs(1), // Expect exactly one argument: the text to translate
 	Run: func(cmd *cobra.Command, args []string) {
 		source, _ := cmd.Flags().GetString("source")
@@ -26,7 +26,7 @@ For example:
 			return
 		}
 
-		fmt.Println("Translated text:", translatedText)
+		fmt.Println(translatedText)
 	},
 }
 
