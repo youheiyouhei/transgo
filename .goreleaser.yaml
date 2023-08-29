@@ -40,3 +40,20 @@ changelog:
     exclude:
       - '^docs:'
       - '^test:'
+
+brews:
+  - repository:
+      owner: youheiyouhei
+      name: homebrew-tap
+      token: "{{ .Env.TAP_GITHUB_TOKEN }}"
+    caveats: |
+      Thanks for installing Transgo!
+
+      Before you can start translating, make sure to configure your DeepL API key:
+      $ transgo config --set api_key=YOUR_API_KEY
+
+      For further details and usage, refer to our documentation at https://github.com/youheiyouhei/transgo
+    homepage: "https://example.com"
+    description: "Transgo CLI tool for translations."
+    dependencies:
+      - name: git
