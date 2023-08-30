@@ -4,7 +4,11 @@
 
 ## Installation
 
-(TBD: Instructions on how to install the application. Typically, this involves building the application using Go or downloading a pre-built binary.)
+To install Transgo via Homebrew, run the following command:
+
+```
+brew install youheiyouhei/tap/transgo
+```
 
 ## Usage
 
